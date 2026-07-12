@@ -80,7 +80,7 @@ __app_usage_log_command() {{
 }}
 # Append to PROMPT_COMMAND safely
 if [[ "$PROMPT_COMMAND" != *__app_usage_log_command* ]]; then
-    PROMPT_COMMAND="__app_usage_log_command; ${PROMPT_COMMAND:-}"
+    PROMPT_COMMAND="__app_usage_log_command; ${{PROMPT_COMMAND:-}}"
 fi
 ''')
     elif shell == "zsh":
@@ -96,25 +96,35 @@ add-zsh-hook preexec __app_usage_log_command
     elif shell in ("pwsh", "powershell"):
         # PowerShell uses PSReadLine history
         print(f'''\
-$__appUsagePreviousCommand = ""
+if (-not (Get-Variable -Name __appUsagePreviousCommand -Scope Script -ErrorAction SilentlyContinue)) {{
+    $script:__appUsagePreviousCommand = ""
+}}
 Set-PSReadLineOption -HistorySaveStyle SaveIncrementally
 
 function __appUsagePromptHook {{
     $hist = Get-History -Count 1
     if ($hist) {{
         $cmd = $hist.CommandLine.Trim()
-        if ($cmd -and $cmd -ne $__appUsagePreviousCommand) {{
-            $__appUsagePreviousCommand = $cmd
+        if ($cmd -and $cmd -ne $script:__appUsagePreviousCommand) {{
+            $script:__appUsagePreviousCommand = $cmd
             & {quoted_command} log-command "$PWD" "$cmd"
         }}
     }}
 }}
 
-$global:PromptBackup = $function:prompt
+# Only wrap the prompt once. If this hook is sourced more than once (e.g. a
+# nested pwsh session, or setup run twice), re-wrapping an already-wrapped
+# prompt via a global backup variable would make the backup point back to
+# itself and recurse infinitely. Guard with a flag instead of blindly
+# re-capturing $function:prompt every time.
+if (-not $global:__appUsagePromptHooked) {{
+    $global:__appUsagePromptHooked = $true
+    $global:AppUsagePromptBackup = $function:prompt
 
-function global:prompt {{
-    __appUsagePromptHook
-    & $global:PromptBackup
+    function global:prompt {{
+        __appUsagePromptHook
+        & $global:AppUsagePromptBackup
+    }}
 }}
 ''')
     else:
