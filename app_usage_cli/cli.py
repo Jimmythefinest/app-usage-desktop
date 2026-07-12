@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 import argparse
+import shlex
 import sys
+from pathlib import Path
+from shutil import which
 from app_usage_cli import builder, importer, syncer, tracker, config, hooks, service
 
 def run_build(args):
@@ -66,6 +69,34 @@ def run_config_remove_repo(args):
         config.save_config(cfg)
         print(f"Removed repository: {args.repo}")
 
+
+def _resolve_app_usage_path() -> str:
+    """Best-effort absolute path to the running app-usage executable/script.
+
+    Shell rc files are sourced in fresh, minimal-PATH shells (and PowerShell
+    profiles run in contexts that may not include the install directory), so
+    a bare `app-usage` in the hook can fail to resolve even though it worked
+    fine in the interactive shell that ran `setup`. Resolve to an absolute
+    path up front and bake that into the hook instead.
+    """
+    # PyInstaller-frozen executable: sys.executable *is* app-usage(.exe).
+    if getattr(sys, "frozen", False):
+        return str(Path(sys.executable).resolve())
+
+    # Installed console-script on PATH right now (e.g. via pip install).
+    found = which("app-usage")
+    if found:
+        return str(Path(found).resolve())
+
+    # Running as a plain script.
+    argv0 = Path(sys.argv[0])
+    if argv0.exists():
+        return str(argv0.resolve())
+
+    # Last resort: hope it's on PATH wherever the hook eventually runs.
+    return "app-usage"
+
+
 def run_setup(args):
     import os
     import sys
@@ -86,6 +117,8 @@ def run_setup(args):
     print(f"[*] Vault directory set to: {vault_path}\n")
     
     # 2. Shell Integration
+    app_usage_path = _resolve_app_usage_path()
+
     shell_path = os.environ.get("SHELL", "")
     shell_name = Path(shell_path).name.lower()
     
@@ -96,9 +129,10 @@ def run_setup(args):
         ans = input(f"Detected {shell_name}. Do you want to enable automatic command logging? (Y/n): ").strip().lower()
         if ans in ("", "y", "yes"):
             rc_file = Path.home() / f".{shell_name}rc"
-            hook_str = f'\n eval "$(app-usage hook {shell_name})"\n'
+            quoted_path = shlex.quote(app_usage_path)
+            hook_str = f'\n eval "$({quoted_path} hook {shell_name})"\n'
             
-            if rc_file.exists() and f"app-usage hook {shell_name}" in rc_file.read_text():
+            if rc_file.exists() and f"hook {shell_name}" in rc_file.read_text():
                 print(f"[*] Command logging already enabled in {rc_file}")
             else:
                 with rc_file.open("a") as f:
@@ -113,8 +147,8 @@ def run_setup(args):
             profile_dir.mkdir(parents=True, exist_ok=True)
             profile_file = profile_dir / "Microsoft.PowerShell_profile.ps1"
             
-            hook_str = '\n Invoke-Expression (& app-usage hook pwsh | Out-String)\n'
-            if profile_file.exists() and "app-usage hook pwsh" in profile_file.read_text():
+            hook_str = f'\n Invoke-Expression (& "{app_usage_path}" hook pwsh | Out-String)\n'
+            if profile_file.exists() and "hook pwsh" in profile_file.read_text():
                  print(f"[*] Command logging already enabled in {profile_file}")
             else:
                 with profile_file.open("a") as f:
@@ -130,7 +164,7 @@ def run_setup(args):
     
     print("=== Setup Complete! ===")
     print("You can now start the background tracker by running:")
-    print("    app-usage daemon")
+    print(f"    {app_usage_path} daemon")
 
 def run_install_service(args):
     service.install_service()
