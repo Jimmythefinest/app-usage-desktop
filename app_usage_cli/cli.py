@@ -32,7 +32,7 @@ def run_daemon(args):
             from . import tracker_wayland_gnome
             tracker_wayland_gnome.main()
         else:
-            from . import tracker
+            from app_usage_cli import tracker
             tracker.main()
 
 def run_config_set_vault(args):
