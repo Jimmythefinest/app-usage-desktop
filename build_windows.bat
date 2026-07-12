@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-echo === Building App Usage CLI Windows Executable ===
+echo === Building App Usage Windows Executables ===
 
 REM --------------------------------------------------
 REM Select Python interpreter
@@ -35,21 +35,41 @@ REM --------------------------------------------------
 IF EXIST build rmdir /s /q build
 IF EXIST dist rmdir /s /q dist
 IF EXIST app-usage.spec del /f /q app-usage.spec
+IF EXIST app-usage-daemon.spec del /f /q app-usage-daemon.spec
 
 REM --------------------------------------------------
-REM Build executable
+REM Build CLI executable (console app)
 REM --------------------------------------------------
 echo.
-echo Running PyInstaller...
+echo Running PyInstaller (CLI)...
 
 %PYTHON% -m PyInstaller ^
     --onefile ^
+    --console ^
     --name app-usage ^
     app_usage_cli\cli.py
 
 IF ERRORLEVEL 1 (
     echo.
-    echo ERROR: Build failed.
+    echo ERROR: CLI build failed.
+    exit /b 1
+)
+
+REM --------------------------------------------------
+REM Build daemon executable (no console window)
+REM --------------------------------------------------
+echo.
+echo Running PyInstaller (daemon)...
+
+%PYTHON% -m PyInstaller ^
+    --onefile ^
+    --windowed ^
+    --name app-usage-daemon ^
+    app_usage_cli\cli.py
+
+IF ERRORLEVEL 1 (
+    echo.
+    echo ERROR: Daemon build failed.
     exit /b 1
 )
 
@@ -57,10 +77,10 @@ REM --------------------------------------------------
 REM Create zip
 REM --------------------------------------------------
 echo.
-echo Packaging executable...
+echo Packaging executables...
 
 powershell -Command ^
-"Compress-Archive -Path 'dist\app-usage.exe' -DestinationPath 'dist\app-usage_0.1.0_windows_amd64.zip' -Force"
+"Compress-Archive -Path 'dist\app-usage.exe','dist\app-usage-daemon.exe' -DestinationPath 'dist\app-usage_0.1.0_windows_amd64.zip' -Force"
 
 IF ERRORLEVEL 1 (
     echo.
@@ -71,8 +91,9 @@ echo.
 echo ========================================
 echo Build completed successfully!
 echo ========================================
-echo Executable:
-echo     dist\app-usage.exe
+echo Executables:
+echo     dist\app-usage.exe            (CLI, has console window)
+echo     dist\app-usage-daemon.exe     (daemon, no console window)
 echo.
 echo Zip:
 echo     dist\app-usage_0.1.0_windows_amd64.zip
