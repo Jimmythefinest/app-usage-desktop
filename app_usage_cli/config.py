@@ -52,4 +52,4 @@ def get_github_dir() -> Path:
     return d
 
 def get_command_logs_dir() -> Path:
-    return Path.home() / ".command_logs"
+    return DATA_DIR / ".command_logs"
