@@ -6,3 +6,4 @@ dist/
 app
 env/
 app-usage.spec
+Release/

@@ -1,0 +1,240 @@
+{
+  "main": {
+    "id": "4f7c54894eb3dbb2",
+    "type": "split",
+    "children": [
+      {
+        "id": "4acb1d2d263860b1",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "29fe3ca4d8ad179d",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Sessions/Create sessions.md",
+                "mode": "preview",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Create sessions"
+            }
+          },
+          {
+            "id": "aaf52d27d7cf8c4d",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "System/Usage Trend.md",
+                "mode": "preview",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Usage Trend"
+            }
+          }
+        ],
+        "currentTab": 1
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "39b039b5b8f6a247",
+    "type": "split",
+    "children": [
+      {
+        "id": "1b85d31e76972b77",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "7689557bf719ab87",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "a22667b0e0ae5706",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "e7e087ba7653a519",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "578e0e672e60b531",
+    "type": "split",
+    "children": [
+      {
+        "id": "803e056694cb2c2b",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "02a1f92082ac761d",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "System/Usage Trend.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for Usage Trend"
+            }
+          },
+          {
+            "id": "222c7d7eccaa3fab",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "System/Usage Trend.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from Usage Trend"
+            }
+          },
+          {
+            "id": "41cba17e4a236951",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "61f4b8301879b9ad",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "51360616eef14708",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "System/Usage Trend.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of Usage Trend"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "aaf52d27d7cf8c4d",
+  "lastOpenFiles": [
+    "README.md",
+    "System/Usage By App.md",
+    "System/Usage Trend.md",
+    "System/Usage_By_Day.md",
+    "System/Commands By Day.md",
+    "commits/commit_jimmythefinest-app-usage-desktop_dc07e71.md",
+    "projects/proj_jimmythefinest-app-usage-desktop.md",
+    "Sessions/Example Session.md",
+    "Sessions/ffdff.md",
+    "Sessions/1.md",
+    "Sessions/fdfdf.md",
+    "System/Project Screen Time.md",
+    "App Usage Obsidian intergration.md",
+    "Sessions/Create sessions.md",
+    "Sessions/Recent Sessions.md",
+    "System/GitHub Commits.md",
+    "commits/commit_jimmythefinest-app-usage-desktop_00efcb3.md",
+    "commits/commit_jimmythefinest-app-usage-desktop_cad5421.md",
+    "commits/commit_jimmythefinest-app-usage-desktop_f34997b.md",
+    "commits/commit_jimmythefinest-app-usage-desktop_b8f8225.md",
+    "commits/commit_jimmythefinest-app-usage-desktop_f6ca4fe.md",
+    "commits/commit_jimmythefinest-app-usage-desktop_c289b2f.md",
+    "commits/commit_jimmythefinest-app-usage-desktop_301f2e7.md",
+    "commits/commit_jimmythefinest-app-usage-desktop_daea9c6.md",
+    "commits/commit_jimmythefinest-app-usage-desktop_690efe8.md",
+    "commits/commit_jimmythefinest-app-usage-desktop_837c254.md",
+    "clean.sh",
+    "System/Usage_By_Day.html",
+    "System/Cache/2026-07-12.json",
+    "System/Cache/2026-07-11.json",
+    "System/Cache",
+    "System",
+    "Sessions",
+    "Scripts/GitHubCommits.js",
+    "Scripts/GitHubCompanion.js",
+    "Scripts/Todo.js"
+  ]
+}

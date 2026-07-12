@@ -1,6 +1,8 @@
-# app-usage CLI
+# app-usage (Obsidian Export Layer)
 
-A cross-platform (Linux & Windows) app usage tracker that logs active window focus, idle time, and shell commands, then processes and exports them as structured notes to an [Obsidian](https://obsidian.md/) vault.
+A cross-platform app usage tracker that adds an **analytics resolution/export layer** specifically for **Obsidian** notes—turning raw app-focus + idle events (and optional shell command logs) into structured, queryable Markdown content for your vault.
+
+(Uses app-usage tracking data and exports it into an Obsidian vault.)
 
 ---
 
@@ -8,9 +10,51 @@ A cross-platform (Linux & Windows) app usage tracker that logs active window foc
 
 ### Windows (Easiest for Non-Developers)
 
-1. Download the latest Windows standalone executable (`app-usage.exe` or `.zip`) from the Releases page (or use `build_windows.bat` to generate one).
-2. Extract the `.zip` file (if downloaded) to a folder (e.g., `C:\app-usage`).
-3. Open Command Prompt or PowerShell in that folder to run the tool, or add the folder to your system's `PATH` to use the `app-usage` command from anywhere.
+This project is a **resolution/export layer on top of app-usage analytics**, turning your raw tracking data into **Obsidian-ready notes**.
+
+1. Download the latest Windows standalone **`.zip`** from the Releases page.
+2. Extract the zip to a **permanent folder** on your PC (example: `C:\app-usage\app-usage-portable`).
+3. **Keep both executables together** in that same folder (the CLI and the daemon).
+4. Open the folder.
+5. Run the **CLI** by starting:
+   - `app-usage.exe`
+   - then Typing setup
+   The setup wizard will:
+   - ask for your Obsidian vault location
+   - enable shell command logging (shell hooks; Windows uses PowerShell-style integration)
+   - install the tracker so it runs automatically at login
+
+6. Optional: start tracking manually with:
+   - `app-usage.exe daemon`
+
+> Tip: you can also run the setup without PowerShell by double-clicking `app-usage.exe` and choosing `setup` in the menu/terminal prompt.
+
+> Important: do not split the executables into different directories. The Windows service/launcher expects them to live together in the installed folder.
+
+---
+
+### Windows data/export behavior
+
+The tracker daemon runs in the background and will **periodically auto-sync** data for:
+- GitHub commit/project notes (via configured repos)
+- Activity/build/import into your Obsidian vault
+
+The generated notes are intended primarily for **machine-generated, queryable history** in Obsidian (and commit/project notes), not human-authored journaling.
+
+### Linux & Advanced Users (via prebuilt binary)
+
+Download the attached Linux standalone binary (if provided by the release), move it to a permanent location, then run `setup`.
+
+1. Move the binary to a permanent folder (example):
+   - `~/usr/bin/` (or `/usr/local/bin/` if you prefer; you may need sudo)
+2. Make sure it is executable:
+   - `chmod +x app-usage`
+3. Run:
+   - `./app-usage setup`
+
+The setup wizard will guide you to your Obsidian vault location.
+
+> The daemon runs in the background and will periodically auto-sync activity/build/import into your vault.
 
 ### Linux & Advanced Users (via Python)
 
