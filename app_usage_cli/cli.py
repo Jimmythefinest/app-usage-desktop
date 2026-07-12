@@ -138,9 +138,71 @@ def run_install_service(args):
 def run_uninstall_service(args):
     service.uninstall_service()
 
-def main():
+def interactive_repl():
+    """Interactive REPL loop for the CLI."""
+    print("App Usage Analytics CLI (Interactive Mode)")
+    print("Type 'help' for a list of commands or 'exit' to quit\n")
+    
+    available_commands = {
+        "build": "Process raw analytics into activities",
+        "sync": "Sync GitHub repositories and issues",
+        "import": "Import activities to Obsidian vault",
+        "run-all": "Run build, sync, and import sequentially",
+        "daemon": "Run the background tracker daemon",
+        "config": "Manage configuration (view, set-vault, add-repo, remove-repo)",
+        "setup": "Interactive 1-hit setup wizard",
+        "install-service": "Install the daemon as a user-space startup service",
+        "uninstall-service": "Remove the startup service",
+        "log-command": "Log a command to the daily command log",
+        "hook": "Generate shell integration hook",
+        "help": "Show this help message",
+        "exit": "Exit the interactive mode",
+    }
+    
+    while True:
+        try:
+            user_input = input("app-usage> ").strip()
+            
+            if not user_input:
+                continue
+            
+            if user_input == "exit":
+                print("Goodbye!")
+                break
+            
+            if user_input == "help":
+                print("\nAvailable commands:")
+                for cmd, desc in available_commands.items():
+                    print(f"  {cmd:<20} {desc}")
+                print()
+                continue
+            
+            # Parse the input as if it were command-line arguments
+            args_list = user_input.split()
+            try:
+                args = main_parser().parse_args(args_list)
+                if hasattr(args, 'func'):
+                    args.func(args)
+                else:
+                    print(f"Unknown command: {args_list[0]}")
+            except SystemExit:
+                # argparse calls sys.exit on error, catch it to stay in loop
+                pass
+            except Exception as e:
+                print(f"Error: {e}")
+                
+        except KeyboardInterrupt:
+            print("\nGoodbye!")
+            break
+        except EOFError:
+            print("\nGoodbye!")
+            break
+
+
+def main_parser():
+    """Create and return the argument parser (extracted for reuse)."""
     parser = argparse.ArgumentParser(description="App Usage Analytics CLI")
-    subparsers = parser.add_subparsers(dest="command", required=True, help="Subcommand to run")
+    subparsers = parser.add_subparsers(dest="command", required=False, help="Subcommand to run")
 
     # Build command
     parser_build = subparsers.add_parser("build", help="Process raw analytics into activities")
@@ -202,9 +264,25 @@ def main():
     parser_hook = subparsers.add_parser("hook", help="Generate shell integration hook")
     parser_hook.add_argument("shell", choices=["bash", "zsh", "pwsh", "powershell"], help="Target shell")
     parser_hook.set_defaults(func=hooks.generate_hook)
+    
+    return parser
 
+
+def main():
+    parser = main_parser()
     args = parser.parse_args()
-    args.func(args)
+    
+    # If no command provided, enter interactive mode
+    if not args.command:
+        interactive_repl()
+        return
+    
+    # Otherwise execute the command
+    if hasattr(args, 'func'):
+        args.func(args)
+    else:
+        parser.print_help()
+
 
 if __name__ == "__main__":
     main()
