@@ -25,7 +25,7 @@ def run_daemon(args):
     import os
     print("--- Starting App Usage Tracker Daemon ---")
     if sys.platform == "win32":
-        from . import tracker_windows
+        from app_usage_cli import tracker_windows
         tracker_windows.main()
     else:
         if os.environ.get("XDG_SESSION_TYPE") == "wayland" and "GNOME" in os.environ.get("XDG_CURRENT_DESKTOP", "").upper():

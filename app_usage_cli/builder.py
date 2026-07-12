@@ -4,7 +4,7 @@ import hashlib
 from pathlib import Path
 from datetime import datetime
 from collections import OrderedDict
-from . import config
+from  app_usage_cli import config
 
 ANALYTICS_DIR = config.get_analytics_dir()
 OUTPUT_DIR = config.get_activities_dir()

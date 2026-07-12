@@ -3,7 +3,7 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
-from . import config
+from  app_usage_cli import config
 
 def log_command(args):
     """

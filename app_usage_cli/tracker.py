@@ -16,7 +16,7 @@ import psutil
 # CONFIG
 ###############################################################################
 
-from . import config
+from  app_usage_cli import config
 
 LOG_DIR = config.get_analytics_dir()
 POLL_INTERVAL = 0.5
@@ -227,7 +227,7 @@ signal.signal(signal.SIGTERM, shutdown)
 
 
 def scheduled_run_all():
-    from . import builder, syncer, importer
+    from  app_usage_cli import builder, syncer, importer
     while running:
         for _ in range(SYNC_INTERVAL):
             if not running: return

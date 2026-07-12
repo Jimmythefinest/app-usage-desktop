@@ -10,7 +10,7 @@ from pathlib import Path
 from dbus_next.aio import MessageBus
 from dbus_next import BusType
 
-from . import config
+from  app_usage_cli import config
 
 LOG_DIR = config.get_analytics_dir()
 POLL_INTERVAL = 0.5
@@ -132,7 +132,7 @@ async def monitor():
         await asyncio.sleep(POLL_INTERVAL)
 
 def scheduled_run_all():
-    from . import builder, syncer, importer
+    from  app_usage_cli import builder, syncer, importer
     while running:
         for _ in range(SYNC_INTERVAL):
             if not running: return

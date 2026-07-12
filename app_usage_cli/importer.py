@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import json, re
 from pathlib import Path
-from . import config
+from  app_usage_cli import config
 
 INPUT = config.get_activities_dir()
 OUTPUT = config.get_vault_dir() / "Activities"

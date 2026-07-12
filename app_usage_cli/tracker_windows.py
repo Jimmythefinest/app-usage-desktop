@@ -4,7 +4,7 @@ import signal
 import threading
 from datetime import datetime
 import psutil
-from . import config
+from  app_usage_cli import config
 import ctypes
 import os
 
@@ -125,7 +125,7 @@ def shutdown(*args):
     running = False
 
 def scheduled_run_all():
-    from . import builder, syncer, importer
+    from  app_usage_cli import builder, syncer, importer
     while running:
         for _ in range(SYNC_INTERVAL):
             if not running: return

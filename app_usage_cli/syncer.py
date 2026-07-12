@@ -3,7 +3,7 @@ import json
 import subprocess
 from pathlib import Path
 from textwrap import dedent
-from . import config
+from  app_usage_cli import config
 
 OUTPUT_DIR = config.get_github_dir()
 

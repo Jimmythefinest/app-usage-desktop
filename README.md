@@ -185,11 +185,11 @@ If you want to add support for a new Desktop Environment (e.g., **KDE Plasma Way
        if os.environ.get("XDG_SESSION_TYPE") == "wayland":
            desktop = os.environ.get("XDG_CURRENT_DESKTOP", "").upper()
            if "GNOME" in desktop:
-               from . import tracker_wayland_gnome
+               from  app_usage_cli import tracker_wayland_gnome
                tracker_wayland_gnome.main()
            elif "KDE" in desktop:
                # Route to your new KDE tracker here!
-               from . import tracker_wayland_kde
+               from  app_usage_cli import tracker_wayland_kde
                tracker_wayland_kde.main()
    ```
 
