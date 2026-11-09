@@ -19,10 +19,11 @@ else:
 LOG_DIR = config.get_analytics_dir()
 POLL_INTERVAL = 0.5
 IDLE_TIMEOUT = 300
-SYNC_INTERVAL = 600
+SYNC_INTERVAL = 300
 
 running = True
 last_app = None
+last_window = None
 last_title = None
 idle = False
 locked = False
@@ -74,8 +75,19 @@ def get_focused_window():
     except Exception:
         return None
 
+HEARTBEAT = 30  # seconds; keeps the open activity's duration current for a "sync now"
+_beat = {"t": 0.0, "n": 0}
+
+
+def heartbeat(active):
+    """Log a HEARTBEAT every HEARTBEAT seconds while the user is active in a window."""
+    if active and time.time() - _beat["t"] >= HEARTBEAT:
+        _beat["t"] = time.time()
+        log("HEARTBEAT")
+
+
 def monitor():
-    global idle, last_app, last_title, locked
+    global idle, last_app, last_title, last_window, locked
 
     while running:
         current = get_focused_window()
@@ -106,8 +118,9 @@ def monitor():
             log("ACTIVE")
 
         if not idle and current is not None:
-            if current["app"] != last_app:
+            if current["window"] != last_window:  # window, not app: same-app switches count
                 log("FOCUS", **current)
+                last_window = current["window"]
                 last_app = current["app"]
                 last_title = current["title"]
             elif current["title"] != last_title:
@@ -115,8 +128,10 @@ def monitor():
                 last_title = current["title"]
         elif not idle and current is None:
             last_app = None
+            last_window = None
             last_title = None
 
+        heartbeat(not idle and last_window is not None)
         time.sleep(POLL_INTERVAL)
 
 def shutdown(*args):
@@ -125,7 +140,7 @@ def shutdown(*args):
     running = False
 
 def scheduled_run_all():
-    from  app_usage_cli import builder, syncer, importer
+    from app_usage_cli import company
     while running:
         for _ in range(SYNC_INTERVAL):
             if not running: return
@@ -134,9 +149,7 @@ def scheduled_run_all():
         
         print("\n--- Scheduled Background Sync ---")
         try:
-            builder.main()
-            syncer.main()
-            importer.main()
+            company.sync()
         except Exception as e:
             print(f"Error during background sync: {e}")
 

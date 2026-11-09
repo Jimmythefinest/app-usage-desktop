@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Team Activity</title>
+<style>
+:root{--bg:#fff;--fg:#1c1c1e;--mut:#6b6b70;--card:#f4f4f6;--line:#e1e1e5;--p:#2e9e6b;--n:#9aa0a6;--u:#d6584b}
+@media(prefers-color-scheme:dark){:root{--bg:#18181b;--fg:#ececef;--mut:#9a9aa2;--card:#222226;--line:#34343a;--p:#3fbf86;--n:#7d828a;--u:#e8786c}}
+body{margin:0;font:15px system-ui,sans-serif;background:var(--bg);color:var(--fg)}
+main{max-width:900px;margin:0 auto;padding:20px}
+h1{font-size:20px;margin:0}h2{font-size:17px}h3{font-size:14px;color:var(--mut);margin:0 0 8px}
+table{width:100%;border-collapse:collapse}td,th{padding:9px 6px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--mut);font-weight:500;font-size:13px}#list tr{cursor:pointer}#list tr:hover{background:var(--card)}
+section{background:var(--card);border-radius:10px;padding:14px 16px;margin:16px 0}
+input,select,button{font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+input[type=checkbox]{padding:0}button{cursor:pointer}.go{background:var(--p);color:#fff;border-color:var(--p)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+code{padding:2px 6px;background:var(--bg);border-radius:4px}.err{color:var(--u);min-height:1.2em}
+.auth{max-width:340px;margin:60px auto}.auth input{display:block;width:100%;box-sizing:border-box;margin:8px 0}
+.bars{display:flex;gap:10px;height:130px;align-items:flex-end}
+.bars div{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;text-align:center}
+.bars i{display:block;width:100%}.bars small{color:var(--mut);margin-top:4px}
+.app{display:flex;gap:10px;align-items:center;padding:4px 0}.app span:first-child{flex:1;overflow:hidden;text-overflow:ellipsis}
+.key i{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 12px}
+</style></head><body>
+<div id="auth" class="auth" hidden>
+  <h1>Team Activity</h1><p style="color:var(--mut)" id="mode">Log in to your company account.</p>
+  <input id="cname" placeholder="Company name" hidden>
+  <input id="email" placeholder="Email" type="email" autocomplete="username">
+  <input id="pw" placeholder="Password (10+ characters)" type="password" autocomplete="current-password">
+  <button class="go" id="submit">Log in</button> <button id="toggle">Create a company account</button>
+  <p class="err" id="autherr"></p></div>
+<main id="app" hidden>
+<div class="row"><h1 id="org"></h1><span><span id="who" style="color:var(--mut)"></span> <button id="logout">Log out</button></span></div>
+<section><h3>Employees join with</h3>Company ID <code id="cid"></code> &nbsp; Server <code id="srv"></code></section>
+<section id="pendingbox" hidden><h3>Waiting for approval</h3><table><tbody id="pending"></tbody></table></section>
+<table><thead><tr><th>Employee</th><th>Active today</th><th>Productive</th><th>Last seen</th></tr></thead><tbody id="list"></tbody></table>
+<section id="detail" hidden></section>
+<section><h3>Settings</h3><div class="row"><input id="orgname" placeholder="Company name">
+<label><input type="checkbox" id="titles"> Collect window titles</label>
+<label><input type="checkbox" id="approval"> Require my approval for new employees</label>
+<button id="save">Save</button></div></section>
+</main><script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const hm=s=>{s=Math.round(s/60);return Math.floor(s/60)+'h '+String(s%60).padStart(2,'0')+'m'};
+let tok=sessionStorage.getItem('tok')||'',signup=false;
+async function raw(path,opt={}){
+  const r=await fetch('/api/v1'+path,{...opt,headers:{Authorization:'Bearer '+tok,'Content-Type':'application/json'}});
+  if(!r.ok){const t=await r.text();let d=t;try{d=JSON.parse(t).detail||t}catch{}const e=new Error(d);e.status=r.status;throw e}
+  return r.json()}
+async function api(path,opt){try{return await raw(path,opt)}catch(e){if(e.status===401){showAuth()}throw e}}
+function showAuth(){tok='';sessionStorage.removeItem('tok');$('#app').hidden=true;$('#auth').hidden=false}
+$('#toggle').onclick=()=>{signup=!signup;$('#cname').hidden=!signup;$('#submit').textContent=signup?'Create account':'Log in';
+  $('#toggle').textContent=signup?'I already have an account':'Create a company account';
+  $('#mode').textContent=signup?'Create a company and its first manager account.':'Log in to your company account.'};
+$('#submit').onclick=async()=>{$('#autherr').textContent='';
+  try{const body=signup?{company_name:$('#cname').value,email:$('#email').value,password:$('#pw').value}:{email:$('#email').value,password:$('#pw').value};
+    const r=await raw(signup?'/signup':'/login',{method:'POST',body:JSON.stringify(body)});
+    tok=r.token;sessionStorage.setItem('tok',tok);$('#pw').value='';start()}catch(e){$('#autherr').textContent=e.message}};
+$('#logout').onclick=async()=>{try{await raw('/logout',{method:'POST'})}catch{}showAuth()};
+async function load(){
+  const [co,es]=await Promise.all([api('/manager/company'),api('/manager/employees')]);
+  $('#org').textContent=co.name;$('#who').textContent=co.email;$('#cid').textContent=co.join_code;$('#srv').textContent=location.origin;
+  $('#orgname').value=co.name;$('#titles').checked=co.capture_titles;$('#approval').checked=co.require_approval;
+  const pend=es.filter(e=>e.status==='pending'),act=es.filter(e=>e.status==='active');
+  $('#pendingbox').hidden=!pend.length;
+  $('#pending').innerHTML=pend.map(e=>`<tr><td>${esc(e.name)} <span style="color:var(--mut)">${esc(e.email)}</span></td><td style="text-align:right">
+    <button class="go" data-a="approve" data-id="${e.id}">Approve</button> <button data-a="reject" data-id="${e.id}">Reject</button></td></tr>`).join('');
+  $('#list').innerHTML=act.length?act.map(e=>{const p=e.today_seconds?Math.round(100*e.today_productive/e.today_seconds):0;
+    return `<tr data-id="${e.id}"><td>${esc(e.name)}</td><td>${hm(e.today_seconds)}</td><td>${p}%</td><td>${esc((e.last_seen||'never').replace('T',' '))}</td></tr>`}).join('')
+    :'<tr><td colspan="4">No active employees yet. Share the Company ID above.</td></tr>'}
+async function detail(id){
+  const s=await api(`/manager/employees/${id}/summary?days=7`),el=$('#detail');
+  const tot=d=>d.productive+d.neutral+d.unproductive,max=Math.max(1,...s.days.map(tot));
+  el.hidden=false;
+  el.innerHTML=`<h2>${esc(s.employee)} <button id="del">Delete employee and data</button></h2>
+   <div class="key"><i style="background:var(--p)"></i>productive<i style="background:var(--n)"></i>neutral<i style="background:var(--u)"></i>unproductive</div>
+   <div class="bars">${s.days.map(d=>`<div title="${hm(tot(d))}">${['productive','neutral','unproductive'].map(k=>`<i style="height:${100*d[k]/max}%;background:var(--${k[0]})"></i>`).join('')}<small>${esc(d.day.slice(5))}</small></div>`).join('')||'No data yet.'}</div>
+   <h3>Top apps (last 7 days)</h3>${s.top_apps.map(a=>`<div class="app"><span>${esc(a.app)}</span><span>${hm(a.seconds)}</span>
+   <select data-app="${esc(a.app)}">${['productive','neutral','unproductive'].map(c=>`<option ${c===a.category?'selected':''}>${c}</option>`).join('')}</select></div>`).join('')}`;
+  $('#del').onclick=async()=>{if(confirm('Permanently delete '+s.employee+' and all their data?')){await api('/manager/employees/'+id,{method:'DELETE'});el.hidden=true;load()}};
+  el.querySelectorAll('select').forEach(x=>x.onchange=async()=>{await api('/manager/categories',{method:'PUT',body:JSON.stringify({app:x.dataset.app,label:x.value})});detail(id)})}
+$('#list').onclick=e=>{const r=e.target.closest('tr[data-id]');if(r)detail(r.dataset.id)};
+$('#pending').onclick=async e=>{const b=e.target.closest('button[data-a]');if(b){await api(`/manager/employees/${b.dataset.id}/${b.dataset.a}`,{method:'POST'});load()}};
+$('#save').onclick=async()=>{await api('/manager/company',{method:'PUT',body:JSON.stringify({name:$('#orgname').value,capture_titles:$('#titles').checked,require_approval:$('#approval').checked})});load()};
+function start(){$('#auth').hidden=true;$('#app').hidden=false;load().catch(()=>{})}
+tok?start():showAuth();
+</script></body></html>

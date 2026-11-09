@@ -13,43 +13,38 @@ else:
 
 CONFIG_FILE = CONFIG_DIR / "config.json"
 
-DEFAULT_CONFIG = {
-    "vault_dir": str(Path.home() / "Documents" / "obsidian_plugin" / "temp_vault"),
-    "repositories": []
-}
 
 def load_config():
     if not CONFIG_FILE.exists():
-        return DEFAULT_CONFIG.copy()
-    with open(CONFIG_FILE, "r") as f:
-        try:
-            return json.load(f)
-        except json.JSONDecodeError:
-            return DEFAULT_CONFIG.copy()
+        return {}
+    try:
+        return json.loads(CONFIG_FILE.read_text())
+    except json.JSONDecodeError:
+        return {}
 
-def save_config(config):
+
+def save_config(cfg):
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-    with open(CONFIG_FILE, "w") as f:
-        json.dump(config, f, indent=2)
+    tmp = CONFIG_FILE.with_suffix(".tmp")  # write-then-rename: the GUI and the daemon both save this file
+    tmp.write_text(json.dumps(cfg, indent=2))
+    try:
+        tmp.chmod(0o600)  # holds the device token
+    except OSError:
+        pass
+    os.replace(tmp, CONFIG_FILE)
 
-def get_vault_dir() -> Path:
-    config = load_config()
-    return Path(config.get("vault_dir", DEFAULT_CONFIG["vault_dir"]))
 
 def get_analytics_dir() -> Path:
     d = DATA_DIR / "analytics"
     d.mkdir(parents=True, exist_ok=True)
     return d
 
+
 def get_activities_dir() -> Path:
     d = DATA_DIR / "activities"
     d.mkdir(parents=True, exist_ok=True)
     return d
 
-def get_github_dir() -> Path:
-    d = DATA_DIR / "github"
-    d.mkdir(parents=True, exist_ok=True)
-    return d
 
 def get_command_logs_dir() -> Path:
     return DATA_DIR / ".command_logs"

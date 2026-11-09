@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import sys
 import hashlib
 from pathlib import Path
 from datetime import datetime
@@ -120,6 +121,11 @@ def build(events, commands=None):
             act["last_seen"]=now
             act["titles"][event["title"]]=None
 
+        elif event["event"] == "HEARTBEAT":
+            cur = windows.get(focused_window)
+            if cur is not None and cur["focus_start"] is not None:
+                cur["last_seen"] = now
+
         elif event["event"] in ("IDLE", "LOCK", "SHUTDOWN"):
             if focused_window is not None and focused_window in windows:
                 cur = windows[focused_window]
@@ -163,25 +169,33 @@ def build(events, commands=None):
 
     return activities
 
+def read_jsonl(path):
+    """Read a JSONL file, skipping (and reporting) malformed lines instead of aborting."""
+    out = []
+    with Path(path).open() as f:
+        for n, line in enumerate(f, 1):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                e = json.loads(line)
+            except json.JSONDecodeError:
+                print(f"skipping malformed line {n} in {Path(path).name}", file=sys.stderr)
+                continue
+            if isinstance(e, dict):
+                out.append(e)
+    return out
+
 def main():
     for file in sorted(ANALYTICS_DIR.glob("*.jsonl")):
         print(f"Processing {file.name}")
-        events=[]
-        with file.open() as f:
-            for line in f:
-                line=line.strip()
-                if line:
-                    events.append(json.loads(line))
+        events=read_jsonl(file)
         
         date_str = file.stem
         cmd_file = COMMANDS_DIR / f"{date_str}.jsonl"
         commands = []
         if cmd_file.exists():
-            with cmd_file.open() as f:
-                for line in f:
-                    line = line.strip()
-                    if line:
-                        commands.append(json.loads(line))
+            commands = read_jsonl(cmd_file)
 
         activities=build(events, commands)
         out=OUTPUT_DIR/file.with_suffix(".json").name

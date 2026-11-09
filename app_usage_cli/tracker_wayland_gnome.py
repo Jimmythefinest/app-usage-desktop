@@ -15,10 +15,11 @@ from  app_usage_cli import config
 LOG_DIR = config.get_analytics_dir()
 POLL_INTERVAL = 0.5
 IDLE_TIMEOUT = 300  # seconds
-SYNC_INTERVAL = 600 # 10 minutes
+SYNC_INTERVAL = 300 # 10 minutes
 
 running = True
 last_app = None
+last_window = None
 last_title = None
 idle = False
 locked = False
@@ -88,8 +89,19 @@ async def monitor_lock(bus):
     except Exception as e:
         log("ERROR", message=f"DBus Monitor Failure: {str(e)}")
 
+HEARTBEAT = 30  # seconds; keeps the open activity's duration current for a "sync now"
+_beat = {"t": 0.0, "n": 0}
+
+
+def heartbeat(active):
+    """Log a HEARTBEAT every HEARTBEAT seconds while the user is active in a window."""
+    if active and time.time() - _beat["t"] >= HEARTBEAT:
+        _beat["t"] = time.time()
+        log("HEARTBEAT")
+
+
 async def monitor():
-    global idle, last_app, last_title
+    global idle, last_app, last_title, last_window
     
     bus = await MessageBus(bus_type=BusType.SESSION).connect()
     await monitor_lock(bus)
@@ -112,8 +124,9 @@ async def monitor():
             current = await get_focused_window(bus)
 
             if current is not None:
-                if current["app"] != last_app:
+                if current["window"] != last_window:  # window, not app: same-app switches count
                     log("FOCUS", **current)
+                    last_window = current["window"]
                     last_app = current["app"]
                     last_title = current["title"]
                 elif current["title"] != last_title:
@@ -127,12 +140,14 @@ async def monitor():
                     last_title = current["title"]
             else:
                 last_app = None
+                last_window = None
                 last_title = None
 
+        heartbeat(not idle and last_window is not None)
         await asyncio.sleep(POLL_INTERVAL)
 
 def scheduled_run_all():
-    from  app_usage_cli import builder, syncer, importer
+    from app_usage_cli import company
     while running:
         for _ in range(SYNC_INTERVAL):
             if not running: return
@@ -141,9 +156,7 @@ def scheduled_run_all():
         
         print("\n--- Scheduled Background Sync ---")
         try:
-            builder.main()
-            syncer.main()
-            importer.main()
+            company.sync()
         except Exception as e:
             print(f"Error during background sync: {e}")
 

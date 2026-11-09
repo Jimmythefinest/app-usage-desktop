@@ -8,8 +8,12 @@ version = "0.1.0"
 description = "App Usage Tracking and Processing CLI"
 dependencies = [
     "psutil",
-    "dbus-next; sys_platform == 'linux'"
+    "dbus-next; sys_platform == 'linux'",
+    "pywin32; sys_platform == 'win32'"
 ]
 
 [project.scripts]
 app-usage = "app_usage_cli.cli:main"
+
+[tool.setuptools]
+packages = ["app_usage_cli"]

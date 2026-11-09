@@ -21,7 +21,7 @@ from  app_usage_cli import config
 LOG_DIR = config.get_analytics_dir()
 POLL_INTERVAL = 0.5
 IDLE_TIMEOUT = 300  # seconds
-SYNC_INTERVAL = 600 # seconds (10 minutes)
+SYNC_INTERVAL = 300 # seconds (10 minutes)
 
 ###############################################################################
 # STATE
@@ -30,6 +30,7 @@ SYNC_INTERVAL = 600 # seconds (10 minutes)
 running = True
 
 last_app = None
+last_window = None
 last_title = None
 
 idle = False
@@ -38,6 +39,9 @@ locked = False  # Main thread reads this, DBus thread writes this
 ###############################################################################
 # LOGGER
 ###############################################################################
+
+
+_log_lock = threading.Lock()
 
 
 def log(event, **kwargs):
@@ -50,7 +54,7 @@ def log(event, **kwargs):
         **kwargs
     }
 
-    with open(logfile, "a") as f:
+    with _log_lock, open(logfile, "a") as f:  # main + DBus threads both log
         f.write(json.dumps(entry) + "\n")
 
 
@@ -116,11 +120,11 @@ def get_idle_time():
 
 
 async def monitor_lock():
-    from dbus_next.aio import MessageBus
-    from dbus_next import BusType
     global locked
 
     try:
+        from dbus_next.aio import MessageBus
+        from dbus_next import BusType
         bus = await MessageBus(bus_type=BusType.SESSION).connect()
         introspection = await bus.introspect(
             "org.gnome.ScreenSaver", "/org/gnome/ScreenSaver"
@@ -157,11 +161,23 @@ def lock_thread():
 # MAIN LOOP
 ###############################################################################
 
+HEARTBEAT = 30  # seconds; keeps the open activity's duration current for a "sync now"
+_beat = {"t": 0.0, "n": 0}
+
+
+def heartbeat(active):
+    """Log a HEARTBEAT every HEARTBEAT seconds while the user is active in a window."""
+    if active and time.time() - _beat["t"] >= HEARTBEAT:
+        _beat["t"] = time.time()
+        log("HEARTBEAT")
+
+
 
 def monitor():
     global idle
     global last_app
     global last_title
+    global last_window
 
     while running:
         # If the screen is locked, suspend polling metrics until it unlocks
@@ -184,8 +200,9 @@ def monitor():
             current = get_focused_window()
 
             if current is not None:
-                if current["app"] != last_app:
+                if current["window"] != last_window:  # window, not app: same-app switches count
                     log("FOCUS", **current)
+                    last_window = current["window"]
                     last_app = current["app"]
                     last_title = current["title"]
 
@@ -202,8 +219,10 @@ def monitor():
                 # If window lost focus completely, clear state cache so 
                 # returning to the app logs cleanly
                 last_app = None
+                last_window = None
                 last_title = None
 
+        heartbeat(not idle and last_window is not None)
         time.sleep(POLL_INTERVAL)
 
 
@@ -227,7 +246,7 @@ signal.signal(signal.SIGTERM, shutdown)
 
 
 def scheduled_run_all():
-    from  app_usage_cli import builder, syncer, importer
+    from app_usage_cli import company
     while running:
         for _ in range(SYNC_INTERVAL):
             if not running: return
@@ -236,9 +255,7 @@ def scheduled_run_all():
         
         print("\n--- Scheduled Background Sync ---")
         try:
-            builder.main()
-            syncer.main()
-            importer.main()
+            company.sync()
         except Exception as e:
             print(f"Error during background sync: {e}")
 
